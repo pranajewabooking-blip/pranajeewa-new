@@ -1,0 +1,18 @@
+{
+  "name": "pranajeewa-booking-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Full-stack Traditional Ayurveda treatment booking website for Pranajeewa.",
+  "scripts": {
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client",
+    "dev:admin": "npm run dev --prefix admin",
+    "build": "npm run build --prefix client && npm run build --prefix admin",
+    "start": "npm start --prefix server",
+    "seed:admin": "npm run seed:admin --prefix server",
+    "seed:treatments": "npm run seed:treatments --prefix server"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
