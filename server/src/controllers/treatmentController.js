@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { Review } from "../models/Review.js";
 import { Treatment } from "../models/Treatment.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { slugify } from "../utils/slug.js";
@@ -87,6 +88,50 @@ const buildUniqueSlug = async (name, currentId) => {
   return candidate;
 };
 
+const attachReviewStats = async (treatments) => {
+  const treatmentList = Array.isArray(treatments) ? treatments : [treatments];
+  const ids = treatmentList.map((treatment) => treatment._id);
+
+  const stats = await Review.aggregate([
+    {
+      $match: {
+        treatment: { $in: ids },
+        status: "Approved"
+      }
+    },
+    {
+      $group: {
+        _id: "$treatment",
+        averageRating: { $avg: "$rating" },
+        reviewCount: { $sum: 1 }
+      }
+    }
+  ]);
+
+  const statsByTreatment = new Map(
+    stats.map((item) => [
+      item._id.toString(),
+      {
+        averageRating: Number(item.averageRating.toFixed(1)),
+        reviewCount: item.reviewCount
+      }
+    ])
+  );
+
+  const decorated = treatmentList.map((treatment) => {
+    const plain = treatment.toObject ? treatment.toObject() : treatment;
+    return {
+      ...plain,
+      reviewStats: statsByTreatment.get(treatment._id.toString()) || {
+        averageRating: 0,
+        reviewCount: 0
+      }
+    };
+  });
+
+  return Array.isArray(treatments) ? decorated : decorated[0];
+};
+
 export const listTreatments = asyncHandler(async (req, res) => {
   const filter = {};
 
@@ -95,7 +140,7 @@ export const listTreatments = asyncHandler(async (req, res) => {
 
   const treatments = await Treatment.find(filter).sort({ createdAt: -1 });
 
-  res.json({ treatments });
+  res.json({ treatments: await attachReviewStats(treatments) });
 });
 
 export const getTreatment = asyncHandler(async (req, res) => {
@@ -110,7 +155,7 @@ export const getTreatment = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: "Treatment not found" });
   }
 
-  res.json({ treatment });
+  res.json({ treatment: await attachReviewStats(treatment) });
 });
 
 export const createTreatment = asyncHandler(async (req, res) => {

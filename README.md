@@ -125,6 +125,12 @@ Deploy `client/dist` and `admin/dist` to your frontend hosting provider. Deploy 
 - `POST /api/news-banners`
 - `PUT /api/news-banners/:id`
 - `DELETE /api/news-banners/:id`
+- `POST /api/reviews`
+- `GET /api/reviews/treatment/:treatmentId`
+- `GET /api/reviews/admin/all`
+- `PATCH /api/reviews/:id/status`
+- `PATCH /api/reviews/:id/reply`
+- `DELETE /api/reviews/:id`
 
 Admin-only routes require:
 

@@ -5,6 +5,7 @@ import BookingsManage from "./pages/BookingsManage";
 import Dashboard from "./pages/Dashboard";
 import Login from "./pages/Login";
 import NewsBannersManage from "./pages/NewsBannersManage";
+import ReviewsManage from "./pages/ReviewsManage";
 import TreatmentsManage from "./pages/TreatmentsManage";
 
 export default function App() {
@@ -16,6 +17,7 @@ export default function App() {
           <Route index element={<Dashboard />} />
           <Route path="treatments" element={<TreatmentsManage />} />
           <Route path="bookings" element={<BookingsManage />} />
+          <Route path="reviews" element={<ReviewsManage />} />
           <Route path="news-banners" element={<NewsBannersManage />} />
         </Route>
       </Route>

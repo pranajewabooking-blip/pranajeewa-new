@@ -1,4 +1,4 @@
-import { CalendarDays, Image, Stethoscope, UsersRound } from "lucide-react";
+import { CalendarDays, Image, MessageSquare, Stethoscope, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { http } from "../api/http";
 import StatusBadge from "../components/StatusBadge";
@@ -7,25 +7,28 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     treatments: [],
     bookings: [],
-    banners: []
+    banners: [],
+    reviews: []
   });
 
   useEffect(() => {
     const loadStats = async () => {
       try {
-        const [treatments, bookings, banners] = await Promise.all([
+        const [treatments, bookings, banners, reviews] = await Promise.all([
           http.get("/treatments"),
           http.get("/bookings/admin/all"),
-          http.get("/news-banners/admin/all")
+          http.get("/news-banners/admin/all"),
+          http.get("/reviews/admin/all")
         ]);
 
         setStats({
           treatments: treatments.data.treatments || [],
           bookings: bookings.data.bookings || [],
-          banners: banners.data.banners || []
+          banners: banners.data.banners || [],
+          reviews: reviews.data.reviews || []
         });
       } catch {
-        setStats({ treatments: [], bookings: [], banners: [] });
+        setStats({ treatments: [], bookings: [], banners: [], reviews: [] });
       }
     };
 
@@ -34,11 +37,13 @@ export default function Dashboard() {
 
   const pending = stats.bookings.filter((booking) => booking.status === "Pending").length;
   const active = stats.bookings.filter((booking) => booking.status === "Active").length;
+  const pendingReviews = stats.reviews.filter((review) => review.status === "Pending").length;
 
   const cards = [
     { label: "Treatments", value: stats.treatments.length, icon: Stethoscope },
     { label: "Bookings", value: stats.bookings.length, icon: CalendarDays },
     { label: "Pending", value: pending, icon: UsersRound },
+    { label: "Reviews", value: pendingReviews, icon: MessageSquare },
     { label: "Banners", value: stats.banners.length, icon: Image }
   ];
 
@@ -49,7 +54,7 @@ export default function Dashboard() {
         <h1 className="mt-2 font-display text-4xl font-bold text-brand-charcoal">Sethsuwa Dashboard</h1>
       </div>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-5">
         {cards.map((card) => {
           const Icon = card.icon;
           return (

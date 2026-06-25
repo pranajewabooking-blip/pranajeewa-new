@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { ArrowRight, Clock3, Wallet } from "lucide-react";
 import { Link } from "react-router-dom";
 import { mediaUrl } from "../api/http";
+import StarRating from "./StarRating";
 
 export default function TreatmentCard({ treatment, index = 0 }) {
   const destination = `/treatments/${treatment.slug || treatment._id}`;
@@ -29,6 +30,12 @@ export default function TreatmentCard({ treatment, index = 0 }) {
             {treatment.category}
           </span>
           <h3 className="mt-3 font-display text-2xl font-bold text-brand-maroon">{treatment.name}</h3>
+          <StarRating
+            value={treatment.reviewStats?.averageRating || 0}
+            count={treatment.reviewStats?.reviewCount || 0}
+            size={15}
+            className="mt-3"
+          />
           <div className="mt-4 flex flex-wrap gap-2 text-xs font-bold text-brand-charcoal">
             {treatment.duration ? (
               <span className="inline-flex items-center gap-1 rounded-md bg-brand-cream px-3 py-1.5">

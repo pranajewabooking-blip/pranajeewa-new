@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { http, mediaUrl } from "../api/http";
 import LoadingState from "../components/LoadingState";
+import StarRating from "../components/StarRating";
 import { fallbackTreatments } from "../data/fallbacks";
 
 const today = new Date().toISOString().split("T")[0];
@@ -15,11 +16,21 @@ export default function TreatmentDetails() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [reviews, setReviews] = useState([]);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [reviewError, setReviewError] = useState("");
   const [form, setForm] = useState({
     customerName: "",
     phoneNumber: "",
     bookingDate: today,
     bookingTime: "09:00"
+  });
+  const [reviewForm, setReviewForm] = useState({
+    customerName: "",
+    contact: "",
+    rating: 5,
+    message: ""
   });
 
   useEffect(() => {
@@ -43,8 +54,33 @@ export default function TreatmentDetails() {
 
   const canBook = useMemo(() => Boolean(treatment?._id), [treatment]);
 
+  useEffect(() => {
+    const loadReviews = async () => {
+      if (!treatment?._id) {
+        setReviews([]);
+        return;
+      }
+
+      try {
+        const response = await http.get(`/reviews/treatment/${treatment._id}`);
+        setReviews(response.data.reviews || []);
+      } catch {
+        setReviews([]);
+      }
+    };
+
+    loadReviews();
+  }, [treatment?._id]);
+
   const updateField = (event) => {
     setForm((current) => ({
+      ...current,
+      [event.target.name]: event.target.value
+    }));
+  };
+
+  const updateReviewField = (event) => {
+    setReviewForm((current) => ({
       ...current,
       [event.target.name]: event.target.value
     }));
@@ -78,6 +114,39 @@ export default function TreatmentDetails() {
     }
   };
 
+  const submitReview = async (event) => {
+    event.preventDefault();
+    setReviewSubmitting(true);
+    setReviewError("");
+    setReviewMessage("");
+
+    if (!treatment?._id) {
+      setReviewSubmitting(false);
+      setReviewError("Reviews are temporarily unavailable for this treatment.");
+      return;
+    }
+
+    try {
+      await http.post("/reviews", {
+        treatmentId: treatment._id,
+        ...reviewForm
+      });
+
+      setReviewMessage("Thank you. Your review is pending approval.");
+      setReviewForm({
+        customerName: "",
+        contact: "",
+        rating: 5,
+        message: ""
+      });
+    } catch (requestError) {
+      const validationMessage = requestError.response?.data?.errors?.[0]?.message;
+      setReviewError(validationMessage || requestError.response?.data?.message || "Unable to submit your review right now.");
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
+
   if (loading) return <LoadingState label="Loading treatment" />;
 
   if (!treatment) {
@@ -102,6 +171,12 @@ export default function TreatmentDetails() {
           >
             <span className="text-sm font-bold uppercase text-brand-gold">{treatment.category}</span>
             <h1 className="mt-4 font-display text-5xl font-bold md:text-7xl">{treatment.name}</h1>
+            <StarRating
+              value={treatment.reviewStats?.averageRating || 0}
+              count={treatment.reviewStats?.reviewCount || 0}
+              className="mt-5"
+              countClassName="text-white/75"
+            />
             <p className="mt-6 max-w-2xl text-lg leading-8 text-white/82">{treatment.shortDescription}</p>
             <div className="mt-7 flex flex-wrap gap-3">
               {treatment.duration ? (
@@ -294,6 +369,108 @@ export default function TreatmentDetails() {
               {submitting ? "Submitting..." : treatment.buttonLabel || "Submit Booking"}
             </button>
           </motion.form>
+        </div>
+      </section>
+
+      <section className="bg-brand-sage py-20">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 sm:px-6 lg:grid-cols-[1fr_0.9fr] lg:px-8">
+          <div>
+            <span className="text-sm font-bold uppercase text-brand-leaf">Reviews & Questions</span>
+            <h2 className="mt-3 font-display text-4xl font-bold text-brand-charcoal">Guest Experiences</h2>
+            <p className="mt-4 max-w-2xl leading-8 text-slate-700">
+              Approved reviews appear here after our team checks them. Please avoid sharing private medical details in a public review.
+            </p>
+
+            <div className="mt-8 space-y-5">
+              {reviews.length ? (
+                reviews.map((review) => (
+                  <article key={review._id} className="rounded-lg bg-white p-5 shadow-soft ring-1 ring-black/5">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                      <div>
+                        <h3 className="font-display text-xl font-bold text-brand-maroon">{review.customerName}</h3>
+                        <p className="mt-1 text-xs text-slate-500">
+                          {new Intl.DateTimeFormat("en-LK", { dateStyle: "medium" }).format(new Date(review.createdAt))}
+                        </p>
+                      </div>
+                      <StarRating value={review.rating} size={16} />
+                    </div>
+                    <p className="mt-4 leading-8 text-slate-700">{review.message}</p>
+                    {review.adminReply ? (
+                      <div className="mt-5 rounded-lg bg-brand-mist p-4">
+                        <p className="text-xs font-bold uppercase text-brand-leaf">Sethsuwa Reply</p>
+                        <p className="mt-2 text-sm leading-7 text-slate-700">{review.adminReply}</p>
+                      </div>
+                    ) : null}
+                  </article>
+                ))
+              ) : (
+                <p className="rounded-lg bg-white p-6 text-slate-600 shadow-soft">
+                  No approved reviews yet. Be the first to share your experience.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <form onSubmit={submitReview} className="luxury-border rounded-lg bg-white p-6 shadow-soft ring-1 ring-black/5 md:p-8">
+            <h2 className="font-display text-3xl font-bold text-brand-maroon">Leave a Review</h2>
+            <p className="mt-3 text-sm leading-7 text-slate-600">
+              Your contact details are only visible to the Sethsuwa admin team.
+            </p>
+
+            <div className="mt-6 space-y-4">
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-brand-charcoal">Star Rating</span>
+                <StarRating
+                  value={reviewForm.rating}
+                  interactive
+                  onChange={(rating) => setReviewForm((current) => ({ ...current, rating }))}
+                  size={24}
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-brand-charcoal">Name</span>
+                <input
+                  name="customerName"
+                  value={reviewForm.customerName}
+                  onChange={updateReviewField}
+                  required
+                  className="w-full rounded-md border border-brand-gold/35 px-4 py-3 outline-none transition focus:border-brand-leaf focus:ring-2 focus:ring-brand-leaf/15"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-brand-charcoal">Phone or Email</span>
+                <input
+                  name="contact"
+                  value={reviewForm.contact}
+                  onChange={updateReviewField}
+                  required
+                  className="w-full rounded-md border border-brand-gold/35 px-4 py-3 outline-none transition focus:border-brand-leaf focus:ring-2 focus:ring-brand-leaf/15"
+                />
+              </label>
+              <label className="block">
+                <span className="mb-2 block text-sm font-bold text-brand-charcoal">Review or Question</span>
+                <textarea
+                  name="message"
+                  value={reviewForm.message}
+                  onChange={updateReviewField}
+                  required
+                  rows="5"
+                  className="w-full rounded-md border border-brand-gold/35 px-4 py-3 outline-none transition focus:border-brand-leaf focus:ring-2 focus:ring-brand-leaf/15"
+                />
+              </label>
+            </div>
+
+            {reviewMessage ? <p className="mt-5 rounded-md bg-emerald-100 px-4 py-3 text-sm font-bold text-emerald-800">{reviewMessage}</p> : null}
+            {reviewError ? <p className="mt-5 rounded-md bg-rose-100 px-4 py-3 text-sm font-bold text-rose-800">{reviewError}</p> : null}
+
+            <button
+              type="submit"
+              disabled={reviewSubmitting}
+              className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-brand-leaf px-6 py-3 font-bold text-white transition hover:bg-brand-red disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {reviewSubmitting ? "Submitting..." : "Submit Review"}
+            </button>
+          </form>
         </div>
       </section>
     </>
