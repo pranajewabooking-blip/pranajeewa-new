@@ -136,10 +136,10 @@ export default function Location() {
               If you're having trouble finding us, call our reception desk directly:
             </p>
             <a
-              href="tel:+94781020385"
+              href="tel:+94704744700"
               className="mt-5 inline-flex rounded-md bg-brand-gold px-5 py-3 font-bold text-brand-charcoal transition hover:bg-white"
             >
-              +94 78 102 0385
+              +94 70 474 4700
             </a>
           </motion.article>
         </div>
