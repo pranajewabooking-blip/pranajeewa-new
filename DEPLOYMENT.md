@@ -48,6 +48,7 @@ Then redeploy the affected services.
 ## Important Free Hosting Notes
 
 - Render free web services sleep after inactivity. The first API request after sleep can take around a minute.
+- This repository includes a GitHub Actions keep-awake workflow that pings the API every 10 minutes. This can reduce cold starts, but it consumes Render free instance hours.
 - Render free disk storage is not suitable for permanent uploads. For production news/treatment images, prefer external image URLs or a cloud media service.
 - MongoDB Atlas must allow Render connections. If Atlas IP allowlist blocks Render, use `0.0.0.0/0` for testing, then tighten security later if needed.
 - The admin user already exists in the current MongoDB database because the seed script was run locally.
