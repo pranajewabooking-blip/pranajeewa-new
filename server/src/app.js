@@ -43,7 +43,8 @@ app.use(
     windowMs: env.rateLimitWindowMs,
     max: env.rateLimitMax,
     standardHeaders: true,
-    legacyHeaders: false
+    legacyHeaders: false,
+    skip: (req) => req.path === "/api/health"
   })
 );
 
