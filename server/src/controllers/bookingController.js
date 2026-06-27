@@ -67,3 +67,13 @@ export const updateBookingStatus = asyncHandler(async (req, res) => {
 
   res.json({ booking });
 });
+
+export const deleteBooking = asyncHandler(async (req, res) => {
+  const booking = await Booking.findByIdAndDelete(req.params.id);
+
+  if (!booking) {
+    return res.status(404).json({ message: "Booking not found" });
+  }
+
+  res.json({ message: "Booking deleted" });
+});

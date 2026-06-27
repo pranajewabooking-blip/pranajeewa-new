@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { http, mediaUrl } from "../api/http";
 import StatusBadge from "../components/StatusBadge";
@@ -14,6 +14,7 @@ export default function BookingsManage() {
   const [bookings, setBookings] = useState([]);
   const [statusFilter, setStatusFilter] = useState("All");
   const [loading, setLoading] = useState(false);
+  const [deletingId, setDeletingId] = useState("");
   const [error, setError] = useState("");
 
   const loadBookings = async () => {
@@ -77,6 +78,23 @@ export default function BookingsManage() {
       );
     } catch {
       setError("Unable to save note.");
+    }
+  };
+
+  const removeBooking = async (booking) => {
+    const confirmed = window.confirm(`Delete booking ${booking.publicId || ""} for ${booking.customerName}?`);
+    if (!confirmed) return;
+
+    setDeletingId(booking._id);
+    setError("");
+
+    try {
+      await http.delete(`/bookings/${booking._id}`);
+      setBookings((current) => current.filter((item) => item._id !== booking._id));
+    } catch {
+      setError("Unable to delete booking.");
+    } finally {
+      setDeletingId("");
     }
   };
 
@@ -165,6 +183,15 @@ export default function BookingsManage() {
                   className="w-full rounded-md bg-brand-charcoal px-4 py-3 font-bold text-white transition hover:bg-brand-maroon"
                 >
                   Save Note
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeBooking(booking)}
+                  disabled={deletingId === booking._id}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-rose-100 px-4 py-3 font-bold text-rose-700 transition hover:bg-rose-200 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  <Trash2 size={17} />
+                  {deletingId === booking._id ? "Deleting..." : "Delete Booking"}
                 </button>
               </div>
             </div>

@@ -15,6 +15,10 @@ export const bookingStatusRules = [
   body("adminNote").optional({ checkFalsy: true }).trim().isLength({ max: 500 })
 ];
 
+export const bookingIdParamRules = [
+  param("id").isMongoId().withMessage("Valid booking id is required")
+];
+
 export const myBookingRules = [
   query("phone").trim().isLength({ min: 7, max: 30 }).withMessage("Phone number is required")
 ];
