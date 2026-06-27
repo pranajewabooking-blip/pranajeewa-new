@@ -27,6 +27,14 @@ services:
         value: https://sethsuwa-ayurveda.onrender.com,https://sethsuwa-admin.onrender.com
       - key: UPLOAD_DIR
         value: uploads
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: CLOUDINARY_FOLDER
+        value: sethsuwa
       - key: RATE_LIMIT_WINDOW_MS
         value: 900000
       - key: RATE_LIMIT_MAX

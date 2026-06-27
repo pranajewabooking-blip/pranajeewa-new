@@ -27,6 +27,15 @@ MONGO_URI=<your MongoDB Atlas connection string>
 
 Render will generate `JWT_SECRET` automatically.
 
+For permanent admin image uploads, also add these Cloudinary environment variables to `sethsuwa-api`:
+
+```text
+CLOUDINARY_CLOUD_NAME=<your Cloudinary cloud name>
+CLOUDINARY_API_KEY=<your Cloudinary API key>
+CLOUDINARY_API_SECRET=<your Cloudinary API secret>
+CLOUDINARY_FOLDER=sethsuwa
+```
+
 ## Expected Free URLs
 
 If these service names are available, the app URLs should be:
@@ -49,7 +58,7 @@ Then redeploy the affected services.
 
 - Render free web services sleep after inactivity. The first API request after sleep can take around a minute.
 - This repository includes a GitHub Actions keep-awake workflow that pings the API every 10 minutes. This can reduce cold starts, but it consumes Render free instance hours.
-- Render free disk storage is not suitable for permanent uploads. For production news/treatment images, prefer external image URLs or a cloud media service.
+- Render free disk storage is not suitable for permanent uploads. Configure Cloudinary for production news/treatment image uploads.
 - MongoDB Atlas must allow Render connections. If Atlas IP allowlist blocks Render, use `0.0.0.0/0` for testing, then tighten security later if needed.
 - The admin user already exists in the current MongoDB database because the seed script was run locally.
 
@@ -78,6 +87,10 @@ CLIENT_URL=https://your-site-url
 ADMIN_URL=https://your-admin-url
 CORS_ORIGINS=https://your-site-url,https://your-admin-url
 UPLOAD_DIR=uploads
+CLOUDINARY_CLOUD_NAME=<your Cloudinary cloud name>
+CLOUDINARY_API_KEY=<your Cloudinary API key>
+CLOUDINARY_API_SECRET=<your Cloudinary API secret>
+CLOUDINARY_FOLDER=sethsuwa
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX=120
 ```

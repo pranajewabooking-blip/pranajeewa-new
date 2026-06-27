@@ -24,6 +24,10 @@ export const env = {
     .map((origin) => origin.trim())
     .filter(Boolean),
   uploadDir: fromServerRoot(process.env.UPLOAD_DIR),
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
+  cloudinaryFolder: process.env.CLOUDINARY_FOLDER || "sethsuwa",
   rateLimitWindowMs: toNumber(process.env.RATE_LIMIT_WINDOW_MS, 15 * 60 * 1000),
   rateLimitMax: toNumber(process.env.RATE_LIMIT_MAX, 120)
 };
@@ -33,6 +37,19 @@ export const assertEnv = () => {
 
   if (!env.mongoUri) missing.push("MONGO_URI");
   if (!env.jwtSecret) missing.push("JWT_SECRET");
+
+  const cloudinaryVariables = [
+    ["CLOUDINARY_CLOUD_NAME", env.cloudinaryCloudName],
+    ["CLOUDINARY_API_KEY", env.cloudinaryApiKey],
+    ["CLOUDINARY_API_SECRET", env.cloudinaryApiSecret]
+  ];
+  const hasPartialCloudinaryConfig = cloudinaryVariables.some(([, value]) => value);
+
+  if (hasPartialCloudinaryConfig) {
+    cloudinaryVariables
+      .filter(([, value]) => !value)
+      .forEach(([name]) => missing.push(name));
+  }
 
   if (missing.length > 0) {
     throw new Error(`Missing required environment variables: ${missing.join(", ")}`);

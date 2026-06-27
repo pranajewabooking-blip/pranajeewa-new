@@ -48,6 +48,15 @@ ADMIN_EMAIL=admin@pranajeewa.lk
 ADMIN_PASSWORD=ChangeMe123!
 ```
 
+For production image uploads, set Cloudinary credentials in the API environment. Uploaded treatment and news banner files will be stored in Cloudinary, while MongoDB stores only the resulting image URL.
+
+```env
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+CLOUDINARY_FOLDER=sethsuwa
+```
+
 ## Install
 
 From the project root:
@@ -144,5 +153,5 @@ Authorization: Bearer <jwt-token>
 - Use HTTPS in production.
 - Set `CLIENT_URL`, `ADMIN_URL`, and `CORS_ORIGINS` to the deployed frontend domains.
 - Use a strong `JWT_SECRET`.
-- Configure persistent storage for `/uploads` or use a cloud media service for production image uploads.
+- Configure Cloudinary or another cloud media service for production image uploads.
 - See `DEPLOYMENT.md` for the free Render hosting setup.

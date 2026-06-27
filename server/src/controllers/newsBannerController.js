@@ -1,7 +1,6 @@
 import { NewsBanner } from "../models/NewsBanner.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
-
-const fileImagePath = (req) => (req.file ? `/uploads/${req.file.filename}` : undefined);
+import { uploadedImageUrl } from "../utils/imageStorage.js";
 
 export const listPublicBanners = asyncHandler(async (req, res) => {
   const banners = await NewsBanner.find({ isActive: true }).sort({ sortOrder: 1, createdAt: -1 });
@@ -14,7 +13,7 @@ export const listAllBanners = asyncHandler(async (req, res) => {
 });
 
 export const createBanner = asyncHandler(async (req, res) => {
-  const image = fileImagePath(req) || req.body.image;
+  const image = (await uploadedImageUrl(req.file, "news-banners")) || req.body.image;
 
   if (!image) {
     return res.status(422).json({
@@ -43,7 +42,7 @@ export const updateBanner = asyncHandler(async (req, res) => {
   }
 
   banner.title = req.body.title ?? banner.title;
-  banner.image = fileImagePath(req) || req.body.image || banner.image;
+  banner.image = (await uploadedImageUrl(req.file, "news-banners")) || req.body.image || banner.image;
   banner.altText = req.body.altText ?? banner.altText;
   banner.linkUrl = req.body.linkUrl ?? banner.linkUrl;
 

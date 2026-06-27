@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import { Review } from "../models/Review.js";
 import { Treatment } from "../models/Treatment.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
+import { uploadedImageUrl } from "../utils/imageStorage.js";
 import { slugify } from "../utils/slug.js";
 
 const normalizeTextArray = (value) => {
@@ -67,8 +68,6 @@ const normalizeIncludedTreatments = (value) => {
 
   return [];
 };
-
-const fileImagePath = (req) => (req.file ? `/uploads/${req.file.filename}` : undefined);
 
 const buildUniqueSlug = async (name, currentId) => {
   const base = slugify(name);
@@ -159,7 +158,7 @@ export const getTreatment = asyncHandler(async (req, res) => {
 });
 
 export const createTreatment = asyncHandler(async (req, res) => {
-  const image = fileImagePath(req) || req.body.image;
+  const image = (await uploadedImageUrl(req.file, "treatments")) || req.body.image;
 
   if (!image) {
     return res.status(422).json({
@@ -206,7 +205,7 @@ export const updateTreatment = asyncHandler(async (req, res) => {
   treatment.category = req.body.category || treatment.category;
   treatment.duration = req.body.duration ?? treatment.duration;
   treatment.price = req.body.price ?? treatment.price;
-  treatment.image = fileImagePath(req) || req.body.image || treatment.image;
+  treatment.image = (await uploadedImageUrl(req.file, "treatments")) || req.body.image || treatment.image;
   if (req.body.galleryImages !== undefined) {
     treatment.galleryImages = normalizeTextArray(req.body.galleryImages);
   }
