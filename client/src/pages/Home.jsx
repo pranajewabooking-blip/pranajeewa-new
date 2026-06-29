@@ -5,19 +5,23 @@ import { Link } from "react-router-dom";
 import { http, mediaUrl } from "../api/http";
 import SectionHeader from "../components/SectionHeader";
 import TreatmentCard from "../components/TreatmentCard";
-import { aboutAwardImage, fallbackBanners, fallbackTreatments, sliderImageUrl } from "../data/fallbacks";
+import { aboutAwardImage, fallbackTreatments, sliderImageUrl } from "../data/fallbacks";
 
 function NewsCarousel({ banners }) {
   const [active, setActive] = useState(0);
-  const visibleBanners = banners.length > 0 ? banners : fallbackBanners;
+  const visibleBanners = banners;
 
   useEffect(() => {
+    if (!visibleBanners.length) return undefined;
+
     const interval = window.setInterval(() => {
       setActive((index) => (index + 1) % visibleBanners.length);
     }, 5200);
 
     return () => window.clearInterval(interval);
   }, [visibleBanners.length]);
+
+  if (!visibleBanners.length) return null;
 
   const banner = visibleBanners[active];
   const bannerKey = banner._id || banner.image;
@@ -93,7 +97,7 @@ function NewsCarousel({ banners }) {
 }
 
 export default function Home() {
-  const [banners, setBanners] = useState(fallbackBanners);
+  const [banners, setBanners] = useState([]);
   const [treatments, setTreatments] = useState(fallbackTreatments);
 
   useEffect(() => {
@@ -104,15 +108,13 @@ export default function Home() {
           http.get("/treatments", { params: { featured: true } })
         ]);
 
-        if (bannerResponse.data.banners?.length) {
-          setBanners(bannerResponse.data.banners);
-        }
+        setBanners(bannerResponse.data.banners || []);
 
         if (treatmentResponse.data.treatments?.length) {
           setTreatments(treatmentResponse.data.treatments);
         }
       } catch {
-        setBanners(fallbackBanners);
+        setBanners([]);
         setTreatments(fallbackTreatments);
       }
     };
