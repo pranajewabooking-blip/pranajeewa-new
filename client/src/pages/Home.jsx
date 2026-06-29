@@ -26,7 +26,7 @@ function NewsCarousel({ banners }) {
     <img
       src={mediaUrl(banner.image)}
       alt={banner.altText || banner.title || "Sethsuwa news"}
-      className="h-full w-full object-contain"
+      className="block h-auto w-full object-contain"
     />
   );
 
@@ -39,7 +39,7 @@ function NewsCarousel({ banners }) {
           text="Awards, announcements, and meaningful moments from our Ayurveda community."
         />
         <div className="relative overflow-hidden rounded-lg bg-brand-leaf shadow-soft">
-          <div className="aspect-[16/9] bg-brand-leaf sm:aspect-[16/7]">
+          <div className="bg-brand-leaf">
             <AnimatePresence mode="wait">
               {bannerLink ? (
                 <motion.a
@@ -48,7 +48,7 @@ function NewsCarousel({ banners }) {
                   target="_blank"
                   rel="noreferrer"
                   aria-label={`Open ${banner.title || "Sethsuwa news"}`}
-                  className="block h-full w-full cursor-pointer focus:outline-none focus:ring-4 focus:ring-brand-gold/60"
+                  className="block w-full cursor-pointer focus:outline-none focus:ring-4 focus:ring-brand-gold/60"
                   initial={{ opacity: 0, scale: 1.04 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}
@@ -59,7 +59,7 @@ function NewsCarousel({ banners }) {
               ) : (
                 <motion.div
                   key={bannerKey}
-                  className="h-full w-full"
+                  className="w-full"
                   initial={{ opacity: 0, scale: 1.04 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.98 }}
