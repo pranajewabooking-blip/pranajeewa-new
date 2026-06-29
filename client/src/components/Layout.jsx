@@ -167,7 +167,7 @@ export default function Layout() {
           <span className="mt-2 block sm:mt-0 sm:inline">
             Developed by{" "}
             <a
-              href="https://sitesn4p-commits.github.io/sites-nap/"
+              href="https://sites-nap.vercel.app/"
               className="font-bold text-brand-red transition hover:text-brand-leaf"
               target="_blank"
               rel="noreferrer"
