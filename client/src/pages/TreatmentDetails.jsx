@@ -1,16 +1,18 @@
 import { motion } from "framer-motion";
-import { CalendarDays, CheckCircle2, Clock, Clock3, Image as ImageIcon, Phone, Sparkles, User, Wallet } from "lucide-react";
+import { CalendarDays, CheckCircle2, Clock, Clock3, Image as ImageIcon, LogIn, ShieldAlert, Sparkles, Wallet } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { http, mediaUrl } from "../api/http";
 import LoadingState from "../components/LoadingState";
 import StarRating from "../components/StarRating";
+import { useCustomerAuth } from "../contexts/CustomerAuthContext";
 import { fallbackTreatments } from "../data/fallbacks";
 
 const today = new Date().toISOString().split("T")[0];
 
 export default function TreatmentDetails() {
   const { idOrSlug } = useParams();
+  const { customer, profileComplete, openLogin } = useCustomerAuth();
   const [treatment, setTreatment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -21,8 +23,6 @@ export default function TreatmentDetails() {
   const [reviewMessage, setReviewMessage] = useState("");
   const [reviewError, setReviewError] = useState("");
   const [form, setForm] = useState({
-    customerName: "",
-    phoneNumber: "",
     bookingDate: today,
     bookingTime: "09:00"
   });
@@ -98,15 +98,32 @@ export default function TreatmentDetails() {
       return;
     }
 
+    if (!customer) {
+      setSubmitting(false);
+      setError("Please log in with Google before booking a treatment.");
+      openLogin();
+      return;
+    }
+
+    if (!profileComplete) {
+      setSubmitting(false);
+      setError("Please complete and verify your profile details before booking a treatment.");
+      return;
+    }
+
+    if (customer.isBlacklisted) {
+      setSubmitting(false);
+      setError(customer.blacklistReason || "This account cannot create new bookings. Please contact Sethsuwa.");
+      return;
+    }
+
     try {
       const response = await http.post("/bookings", {
         treatmentId: treatment._id,
         ...form
       });
 
-      window.localStorage.setItem("pranajeewa_booking_phone", form.phoneNumber);
       setMessage(`Booking submitted. Reference ${response.data.booking.publicId}`);
-      setForm((current) => ({ ...current, customerName: "" }));
     } catch (requestError) {
       setError(requestError.response?.data?.message || "Unable to submit the booking right now.");
     } finally {
@@ -302,31 +319,46 @@ export default function TreatmentDetails() {
             transition={{ duration: 0.65 }}
           >
             <h2 className="font-display text-3xl font-bold text-brand-maroon">Book This Treatment</h2>
+            {!customer ? (
+              <div className="mt-5 rounded-lg bg-amber-100 p-4 text-amber-950">
+                <p className="flex items-center gap-2 font-bold">
+                  <ShieldAlert size={18} /> Customer login required
+                </p>
+                <p className="mt-2 text-sm leading-6">Please log in with Google before creating a treatment booking.</p>
+                <button
+                  type="button"
+                  onClick={openLogin}
+                  className="mt-4 inline-flex items-center gap-2 rounded-md bg-brand-red px-4 py-2 text-sm font-bold text-white"
+                >
+                  <LogIn size={16} /> Log in
+                </button>
+              </div>
+            ) : !profileComplete ? (
+              <div className="mt-5 rounded-lg bg-amber-100 p-4 text-amber-950">
+                <p className="flex items-center gap-2 font-bold">
+                  <ShieldAlert size={18} /> Profile verification required
+                </p>
+                <p className="mt-2 text-sm leading-6">
+                  Fill your name, mobile number, WhatsApp number, address, and gender on the profile page before booking.
+                </p>
+                <Link
+                  to="/profile"
+                  className="mt-4 inline-flex rounded-md bg-brand-charcoal px-4 py-2 text-sm font-bold text-white"
+                >
+                  Complete Profile
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-5 rounded-lg bg-emerald-100 p-4 text-emerald-900">
+                <p className="flex items-center gap-2 font-bold">
+                  <CheckCircle2 size={18} /> Booking as {customer.name}
+                </p>
+                <p className="mt-2 text-sm leading-6">
+                  Mobile: {customer.mobileNumber} | Gender: {customer.gender}
+                </p>
+              </div>
+            )}
             <div className="mt-6 space-y-4">
-              <label className="block">
-                <span className="mb-2 flex items-center gap-2 text-sm font-bold text-brand-charcoal">
-                  <User size={17} /> Customer Name
-                </span>
-                <input
-                  name="customerName"
-                  value={form.customerName}
-                  onChange={updateField}
-                  required
-                  className="w-full rounded-md border border-brand-gold/35 bg-white px-4 py-3 outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/15"
-                />
-              </label>
-              <label className="block">
-                <span className="mb-2 flex items-center gap-2 text-sm font-bold text-brand-charcoal">
-                  <Phone size={17} /> Phone Number
-                </span>
-                <input
-                  name="phoneNumber"
-                  value={form.phoneNumber}
-                  onChange={updateField}
-                  required
-                  className="w-full rounded-md border border-brand-gold/35 bg-white px-4 py-3 outline-none transition focus:border-brand-red focus:ring-2 focus:ring-brand-red/15"
-                />
-              </label>
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block">
                   <span className="mb-2 flex items-center gap-2 text-sm font-bold text-brand-charcoal">
@@ -363,7 +395,7 @@ export default function TreatmentDetails() {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={submitting || !customer || !profileComplete || customer?.isBlacklisted}
               className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-brand-red px-6 py-3 font-bold text-white transition hover:bg-brand-maroon disabled:cursor-not-allowed disabled:opacity-70"
             >
               {submitting ? "Submitting..." : treatment.buttonLabel || "Submit Booking"}

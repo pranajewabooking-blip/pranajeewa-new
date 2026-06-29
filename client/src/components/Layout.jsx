@@ -1,15 +1,16 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ExternalLink, Globe, Instagram, Mail, MapPin, Menu, Phone, X } from "lucide-react";
+import { ExternalLink, Globe, Instagram, LogIn, Mail, MapPin, Menu, Phone, UserRound, X } from "lucide-react";
 import { useState } from "react";
 import { Link, NavLink, Outlet } from "react-router-dom";
+import CustomerLoginModal from "./CustomerLoginModal";
+import { useCustomerAuth } from "../contexts/CustomerAuthContext";
 import { logoUrl } from "../data/fallbacks";
 
 const navItems = [
   { label: "Home", to: "/" },
   { label: "About", to: "/about" },
   { label: "Treatments", to: "/treatments" },
-  { label: "Location", to: "/location" },
-  { label: "My Bookings", to: "/bookings" }
+  { label: "Location", to: "/location" }
 ];
 
 const linkClass = ({ isActive }) =>
@@ -19,6 +20,12 @@ const linkClass = ({ isActive }) =>
 
 export default function Layout() {
   const [open, setOpen] = useState(false);
+  const { customer, openLogin, logout } = useCustomerAuth();
+
+  const handleLoginClick = () => {
+    setOpen(false);
+    openLogin();
+  };
 
   return (
     <div className="min-h-screen bg-brand-sage/45 text-brand-charcoal">
@@ -50,6 +57,28 @@ export default function Layout() {
                 {item.label}
               </NavLink>
             ))}
+            {customer ? (
+              <div className="flex items-center gap-3">
+                <NavLink to="/profile" className={linkClass}>
+                  My Profile
+                </NavLink>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="rounded-md bg-slate-100 px-3 py-2 text-xs font-bold text-brand-charcoal transition hover:bg-brand-cream"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={handleLoginClick}
+                className="inline-flex items-center gap-2 rounded-full bg-brand-red px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-brand-maroon"
+              >
+                <LogIn size={16} /> Log in
+              </button>
+            )}
           </div>
 
           <button
@@ -76,6 +105,33 @@ export default function Layout() {
                     {item.label}
                   </NavLink>
                 ))}
+                {customer ? (
+                  <>
+                    <NavLink to="/profile" className={linkClass} onClick={() => setOpen(false)}>
+                      <span className="inline-flex items-center gap-2">
+                        <UserRound size={16} /> My Profile
+                      </span>
+                    </NavLink>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        logout();
+                        setOpen(false);
+                      }}
+                      className="inline-flex w-fit rounded-md bg-slate-100 px-4 py-2 text-sm font-bold text-brand-charcoal"
+                    >
+                      Logout
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleLoginClick}
+                    className="inline-flex w-fit items-center gap-2 rounded-full bg-brand-red px-4 py-2 text-sm font-bold text-white"
+                  >
+                    <LogIn size={16} /> Log in
+                  </button>
+                )}
               </div>
             </motion.div>
           ) : null}
@@ -85,6 +141,8 @@ export default function Layout() {
       <main>
         <Outlet />
       </main>
+
+      <CustomerLoginModal />
 
       <footer id="location" className="border-t border-brand-leaf/15 bg-white text-brand-charcoal">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.2fr_1fr_1fr] lg:px-8">

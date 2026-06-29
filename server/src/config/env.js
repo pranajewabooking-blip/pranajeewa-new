@@ -17,6 +17,7 @@ export const env = {
   mongoUri: process.env.MONGO_URI,
   jwtSecret: process.env.JWT_SECRET,
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
+  googleClientId: process.env.GOOGLE_CLIENT_ID,
   clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
   adminUrl: process.env.ADMIN_URL || "http://localhost:5174",
   corsOrigins: (process.env.CORS_ORIGINS || "")

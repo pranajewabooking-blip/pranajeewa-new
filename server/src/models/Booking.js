@@ -15,6 +15,11 @@ const bookingSchema = new mongoose.Schema(
       ref: "Treatment",
       required: true
     },
+    customer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Customer",
+      index: true
+    },
     customerName: {
       type: String,
       required: true,
@@ -27,6 +32,31 @@ const bookingSchema = new mongoose.Schema(
       trim: true,
       index: true,
       maxlength: 30
+    },
+    customerGender: {
+      type: String,
+      enum: ["Male", "Female"],
+      index: true
+    },
+    treatmentName: {
+      type: String,
+      trim: true,
+      maxlength: 140
+    },
+    treatmentCategory: {
+      type: String,
+      trim: true,
+      maxlength: 80
+    },
+    priceText: {
+      type: String,
+      trim: true,
+      maxlength: 80
+    },
+    priceAmount: {
+      type: Number,
+      default: 0,
+      min: 0
     },
     bookingDate: {
       type: Date,
@@ -47,6 +77,13 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: 500
+    },
+    cancelledBy: {
+      type: String,
+      enum: ["customer", "admin"]
+    },
+    cancelledAt: {
+      type: Date
     }
   },
   {

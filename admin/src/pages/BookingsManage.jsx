@@ -151,9 +151,20 @@ export default function BookingsManage() {
                 </div>
                 <h2 className="mt-3 font-display text-2xl font-bold text-brand-maroon">{booking.customerName}</h2>
                 <p className="mt-1 text-sm text-slate-600">{booking.phoneNumber}</p>
+                {booking.customer ? (
+                  <p className="mt-1 text-sm text-slate-600">
+                    {booking.customer.email} | {booking.customer.gender || "Gender not set"}
+                    {booking.customer.isBlacklisted ? " | Blacklisted" : ""}
+                  </p>
+                ) : null}
                 <p className="mt-3 text-sm leading-7 text-slate-700">
                   {booking.treatment?.name} | {formatDate(booking.bookingDate)} at {booking.bookingTime}
                 </p>
+                {booking.priceText ? (
+                  <p className="mt-1 text-sm font-bold text-brand-leaf">
+                    Price: {booking.priceText}
+                  </p>
+                ) : null}
               </div>
               <div className="space-y-3">
                 <label className="block">

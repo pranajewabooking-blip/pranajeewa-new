@@ -8,8 +8,8 @@ Production-ready full-stack booking website for **Pranajeewa**, a traditional Sr
 - Home page with animated logo, sticky navigation, Ayurveda hero, news carousel, about preview, treatment cards, and footer contact details.
 - About page with heritage copy, image sections, and timeline layout.
 - Treatments listing, treatment detail pages, and booking form.
-- Customer booking lookup by phone number with Pending, Active, Completed, and Cancelled statuses.
-- Separate secure admin dashboard for treatment CRUD, booking status management, and news banner management.
+- Google customer login, editable customer profile, profile-gated bookings, treatment history, and customer cancellation.
+- Separate secure admin dashboard for treatment CRUD, booking status management, clients, blacklists, income reports, reviews, and news banner management.
 - Express API with MongoDB Atlas, Mongoose models, JWT auth, password hashing, validation, Helmet, rate limiting, CORS protection, and image upload support.
 
 ## Project Structure
@@ -46,6 +46,13 @@ Set the first admin account before seeding:
 ADMIN_NAME=Pranajeewa Admin
 ADMIN_EMAIL=admin@pranajeewa.lk
 ADMIN_PASSWORD=ChangeMe123!
+```
+
+Customer Google login requires a Google OAuth web client ID. Use the same client ID in both the API and public website environments:
+
+```env
+GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
+VITE_GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
 ```
 
 For production image uploads, set Cloudinary credentials in the API environment. Uploaded treatment and news banner files will be stored in Cloudinary, while MongoDB stores only the resulting image URL.
@@ -120,15 +127,23 @@ Deploy `client/dist` and `admin/dist` to your frontend hosting provider. Deploy 
 - `GET /api/health`
 - `POST /api/auth/login`
 - `GET /api/auth/me`
+- `POST /api/customer-auth/google`
+- `GET /api/customers/me`
+- `PUT /api/customers/me`
+- `GET /api/customers/me/bookings`
+- `GET /api/customers/admin/all`
+- `PATCH /api/customers/:id/blacklist`
 - `GET /api/treatments`
 - `GET /api/treatments/:idOrSlug`
 - `POST /api/treatments`
 - `PUT /api/treatments/:id`
 - `DELETE /api/treatments/:id`
 - `POST /api/bookings`
-- `GET /api/bookings/my?phone=...`
+- `GET /api/bookings/my`
+- `PATCH /api/bookings/:id/cancel`
 - `GET /api/bookings/admin/all`
 - `PATCH /api/bookings/:id/status`
+- `GET /api/reports/income`
 - `GET /api/news-banners`
 - `GET /api/news-banners/admin/all`
 - `POST /api/news-banners`

@@ -8,6 +8,16 @@ export const http = axios.create({
   timeout: 15000
 });
 
+http.interceptors.request.use((config) => {
+  const token = window.localStorage.getItem("sethsuwa_customer_token");
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 export const mediaUrl = (value) => {
   if (!value) return "";
   if (/^https?:\/\//i.test(value)) return value;

@@ -4,8 +4,8 @@ import Layout from "./components/Layout";
 import About from "./pages/About";
 import Home from "./pages/Home";
 import Location from "./pages/Location";
-import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
 import TreatmentDetails from "./pages/TreatmentDetails";
 import Treatments from "./pages/Treatments";
 
@@ -35,7 +35,8 @@ export default function App() {
           <Route path="treatments" element={<Treatments />} />
           <Route path="treatments/:idOrSlug" element={<TreatmentDetails />} />
           <Route path="location" element={<Location />} />
-          <Route path="bookings" element={<MyBookings />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="bookings" element={<Profile />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

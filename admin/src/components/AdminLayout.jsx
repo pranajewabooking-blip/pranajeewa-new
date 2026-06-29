@@ -1,4 +1,4 @@
-import { CalendarDays, Image, LayoutDashboard, LogOut, Menu, MessageSquare, Stethoscope, X } from "lucide-react";
+import { BarChart3, CalendarDays, Image, LayoutDashboard, LogOut, Menu, MessageSquare, Stethoscope, UsersRound, X } from "lucide-react";
 import { useState } from "react";
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -7,6 +7,8 @@ const navItems = [
   { label: "Dashboard", to: "/", icon: LayoutDashboard },
   { label: "Treatments", to: "/treatments", icon: Stethoscope },
   { label: "Bookings", to: "/bookings", icon: CalendarDays },
+  { label: "Clients", to: "/clients", icon: UsersRound },
+  { label: "Income", to: "/income", icon: BarChart3 },
   { label: "Reviews", to: "/reviews", icon: MessageSquare },
   { label: "News Banners", to: "/news-banners", icon: Image }
 ];

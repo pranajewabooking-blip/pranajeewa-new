@@ -27,6 +27,13 @@ MONGO_URI=<your MongoDB Atlas connection string>
 
 Render will generate `JWT_SECRET` automatically.
 
+For Google customer login, add the same OAuth web client ID to the API and public site:
+
+```text
+sethsuwa-api: GOOGLE_CLIENT_ID=<your Google OAuth client ID>
+sethsuwa-ayurveda: VITE_GOOGLE_CLIENT_ID=<your Google OAuth client ID>
+```
+
 For permanent admin image uploads, also add these Cloudinary environment variables to `sethsuwa-api`:
 
 ```text
@@ -83,6 +90,7 @@ NODE_ENV=production
 MONGO_URI=<your MongoDB Atlas connection string>
 JWT_SECRET=<strong random secret>
 JWT_EXPIRES_IN=7d
+GOOGLE_CLIENT_ID=<your Google OAuth client ID>
 CLIENT_URL=https://your-site-url
 ADMIN_URL=https://your-admin-url
 CORS_ORIGINS=https://your-site-url,https://your-admin-url
@@ -102,6 +110,7 @@ Root Directory: client
 Build Command: npm ci && npm run build
 Publish Directory: dist
 VITE_API_URL=https://your-api-url/api
+VITE_GOOGLE_CLIENT_ID=<your Google OAuth client ID>
 ```
 
 Add an SPA rewrite:

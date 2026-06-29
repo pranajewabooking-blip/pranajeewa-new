@@ -129,10 +129,10 @@ export default function Home() {
                 Explore Treatments <ArrowRight size={18} />
               </Link>
               <Link
-                to="/bookings"
+                to="/profile"
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-white/55 px-6 py-3 font-bold text-white transition hover:bg-white hover:text-brand-maroon"
               >
-                View My Bookings <CalendarDays size={18} />
+                My Profile <CalendarDays size={18} />
               </Link>
             </div>
           </motion.div>

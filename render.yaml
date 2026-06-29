@@ -19,6 +19,8 @@ services:
         generateValue: true
       - key: JWT_EXPIRES_IN
         value: 7d
+      - key: GOOGLE_CLIENT_ID
+        sync: false
       - key: CLIENT_URL
         value: https://sethsuwa-ayurveda.onrender.com
       - key: ADMIN_URL
@@ -54,6 +56,8 @@ services:
     envVars:
       - key: VITE_API_URL
         value: https://sethsuwa-api.onrender.com/api
+      - key: VITE_GOOGLE_CLIENT_ID
+        sync: false
 
   - type: web
     name: sethsuwa-admin
