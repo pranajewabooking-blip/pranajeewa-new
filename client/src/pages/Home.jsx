@@ -20,6 +20,15 @@ function NewsCarousel({ banners }) {
   }, [visibleBanners.length]);
 
   const banner = visibleBanners[active];
+  const bannerKey = banner._id || banner.image;
+  const bannerLink = typeof banner.linkUrl === "string" ? banner.linkUrl.trim() : "";
+  const bannerImage = (
+    <img
+      src={mediaUrl(banner.image)}
+      alt={banner.altText || banner.title || "Sethsuwa news"}
+      className="h-full w-full object-contain"
+    />
+  );
 
   return (
     <section className="bg-brand-mist py-16">
@@ -32,24 +41,41 @@ function NewsCarousel({ banners }) {
         <div className="relative overflow-hidden rounded-lg bg-brand-leaf shadow-soft">
           <div className="aspect-[16/9] bg-brand-leaf sm:aspect-[16/7]">
             <AnimatePresence mode="wait">
-              <motion.img
-                key={banner._id || banner.image}
-                src={mediaUrl(banner.image)}
-                alt={banner.altText || banner.title || "Sethsuwa news"}
-                className="h-full w-full object-contain"
-                initial={{ opacity: 0, scale: 1.04 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.8 }}
-              />
+              {bannerLink ? (
+                <motion.a
+                  key={bannerKey}
+                  href={bannerLink}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Open ${banner.title || "Sethsuwa news"}`}
+                  className="block h-full w-full cursor-pointer focus:outline-none focus:ring-4 focus:ring-brand-gold/60"
+                  initial={{ opacity: 0, scale: 1.04 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.8 }}
+                >
+                  {bannerImage}
+                </motion.a>
+              ) : (
+                <motion.div
+                  key={bannerKey}
+                  className="h-full w-full"
+                  initial={{ opacity: 0, scale: 1.04 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.8 }}
+                >
+                  {bannerImage}
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-charcoal/85 to-transparent p-6 text-white md:p-8">
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-brand-charcoal/85 to-transparent p-6 text-white md:p-8">
             <p className="max-w-3xl font-display text-2xl font-bold md:text-4xl">
               {banner.title || "Traditional Ayurveda care, thoughtfully managed"}
             </p>
           </div>
-          <div className="absolute right-5 top-5 flex gap-2">
+          <div className="absolute right-5 top-5 z-10 flex gap-2">
             {visibleBanners.map((item, index) => (
               <button
                 key={item._id || item.image}
