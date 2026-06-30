@@ -1,4 +1,4 @@
-import { Banknote, RefreshCw, UsersRound } from "lucide-react";
+import { Banknote, Download, RefreshCw, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { http } from "../api/http";
 
@@ -14,8 +14,19 @@ const formatDate = (value) =>
     dateStyle: "medium"
   }).format(new Date(value));
 
+const currentMonthValue = () => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+};
+
+const parseMonthValue = (value) => {
+  const [year, month] = value.split("-").map(Number);
+  return { year, month };
+};
+
 export default function IncomeReport() {
   const [report, setReport] = useState(null);
+  const [monthValue, setMonthValue] = useState(currentMonthValue());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -24,7 +35,8 @@ export default function IncomeReport() {
     setError("");
 
     try {
-      const response = await http.get("/reports/income", { params: { days: 45 } });
+      const { year, month } = parseMonthValue(monthValue);
+      const response = await http.get("/reports/income", { params: { year, month } });
       setReport(response.data);
     } catch {
       setError("Unable to load income report.");
@@ -35,9 +47,10 @@ export default function IncomeReport() {
 
   useEffect(() => {
     loadReport();
-  }, []);
+  }, [monthValue]);
 
   const totals = report?.totals || {};
+  const monthLabel = report?.period?.label || monthValue;
 
   const cards = [
     ["Completed Treatments", totals.completedCount || 0, UsersRound],
@@ -47,23 +60,153 @@ export default function IncomeReport() {
     ["Clinic Net", formatMoney(totals.netClinicIncome), Banknote]
   ];
 
+  const downloadPdf = async () => {
+    if (!report) return;
+
+    const { default: jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 42;
+    let y = 48;
+
+    const addPageIfNeeded = (height = 28) => {
+      if (y + height < pageHeight - margin) return;
+      doc.addPage();
+      y = 48;
+    };
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(22);
+    doc.text("SETHSUWA", margin, y);
+    y += 26;
+    doc.setFontSize(16);
+    doc.text(`Monthly Income Report - ${monthLabel}`, margin, y);
+    y += 16;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.text(`Generated: ${new Date().toLocaleString("en-LK")}`, margin, y);
+    y += 30;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Summary", margin, y);
+    y += 18;
+
+    const summaryRows = [
+      ["Completed treatments", totals.completedCount || 0],
+      ["Total income", formatMoney(totals.totalIncome)],
+      ["Male customer treatment income", formatMoney(totals.maleIncome)],
+      ["Male therapist 20% share", formatMoney(totals.maleTherapyShare)],
+      ["Female customer treatment income", formatMoney(totals.femaleIncome)],
+      ["Female therapist 20% share", formatMoney(totals.femaleTherapyShare)],
+      ["Clinic net income", formatMoney(totals.netClinicIncome)]
+    ];
+
+    doc.setFont("helvetica", "normal");
+    summaryRows.forEach(([label, value]) => {
+      addPageIfNeeded(20);
+      doc.text(String(label), margin, y);
+      doc.text(String(value), pageWidth - margin, y, { align: "right" });
+      y += 18;
+    });
+
+    y += 18;
+    addPageIfNeeded(42);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("Completed Treatments", margin, y);
+    y += 20;
+
+    const headers = ["Date", "Ref", "Client", "Gender", "Treatment", "Amount"];
+    const widths = [68, 76, 96, 52, 160, 72];
+
+    const drawHeader = () => {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      let x = margin;
+      headers.forEach((header, index) => {
+        doc.text(header, x, y);
+        x += widths[index];
+      });
+      y += 12;
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 14;
+      doc.setFont("helvetica", "normal");
+    };
+
+    drawHeader();
+
+    (report.bookings || []).forEach((booking) => {
+      addPageIfNeeded(32);
+      if (y === 48) drawHeader();
+
+      const row = [
+        formatDate(booking.bookingDate),
+        booking.publicId || "",
+        booking.customerName || "",
+        booking.customerGender || "",
+        booking.treatmentName || "",
+        formatMoney(booking.priceAmount)
+      ];
+      let x = margin;
+      doc.setFontSize(7.5);
+      row.forEach((cell, index) => {
+        const text = doc.splitTextToSize(String(cell), widths[index] - 4);
+        doc.text(text.slice(0, 2), x, y);
+        x += widths[index];
+      });
+      y += 28;
+    });
+
+    if (!report.bookings?.length) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10);
+      doc.text("No completed treatments for this month.", margin, y);
+    }
+
+    const safeMonth = monthLabel.replace(/\s+/g, "-").toLowerCase();
+    doc.save(`sethsuwa-income-${safeMonth}.pdf`);
+  };
+
   return (
     <div>
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-sm font-bold uppercase text-brand-red">Income</p>
-          <h1 className="mt-2 font-display text-4xl font-bold text-brand-charcoal">45 Day Treatment Income</h1>
+          <h1 className="mt-2 font-display text-4xl font-bold text-brand-charcoal">Monthly Treatment Income</h1>
           <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
-            This report only shows completed treatment bookings inside the latest 45 day window.
+            Select a month to view completed treatment income and download the details as a PDF.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={loadReport}
-          className="inline-flex items-center justify-center gap-2 rounded-md bg-brand-red px-5 py-3 font-bold text-white transition hover:bg-brand-maroon"
-        >
-          <RefreshCw size={18} /> Refresh
-        </button>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <label className="block">
+            <span className="mb-2 block text-sm font-bold text-brand-charcoal">Month</span>
+            <input
+              type="month"
+              value={monthValue}
+              onChange={(event) => setMonthValue(event.target.value || currentMonthValue())}
+              className="min-h-12 rounded-md border border-brand-gold/35 bg-white px-4 font-bold text-brand-charcoal outline-none focus:border-brand-red focus:ring-2 focus:ring-brand-red/15"
+            />
+          </label>
+          <div className="flex items-end gap-3">
+            <button
+              type="button"
+              onClick={loadReport}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-brand-red px-5 font-bold text-white transition hover:bg-brand-maroon"
+            >
+              <RefreshCw size={18} /> Refresh
+            </button>
+            <button
+              type="button"
+              onClick={downloadPdf}
+              disabled={!report}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-md bg-brand-charcoal px-5 font-bold text-white transition hover:bg-brand-maroon disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              <Download size={18} /> PDF
+            </button>
+          </div>
+        </div>
       </div>
 
       {error ? <p className="mt-6 rounded-md bg-rose-100 px-4 py-3 text-sm font-bold text-rose-800">{error}</p> : null}
@@ -120,18 +263,19 @@ export default function IncomeReport() {
             <p>Only completed bookings are counted as income.</p>
             <p>Male customer treatment income contributes 20% to the male therapy share.</p>
             <p>Female customer treatment income contributes 20% to the female therapy share.</p>
-            <p>The report window is limited to 45 days, so older completed bookings are hidden from this page.</p>
+            <p>Use the month selector to view older or newer monthly income reports. Booking records are not deleted by this report.</p>
           </div>
         </section>
       </div>
 
       <section className="mt-8 rounded-lg bg-white p-6 shadow-soft ring-1 ring-black/5">
-        <h2 className="font-display text-2xl font-bold text-brand-charcoal">Completed Treatments</h2>
+        <h2 className="font-display text-2xl font-bold text-brand-charcoal">Completed Treatments - {monthLabel}</h2>
         <div className="mt-5 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="bg-brand-cream text-brand-charcoal">
               <tr>
                 <th className="px-4 py-3">Date</th>
+                <th className="px-4 py-3">Ref</th>
                 <th className="px-4 py-3">Client</th>
                 <th className="px-4 py-3">Gender</th>
                 <th className="px-4 py-3">Treatment</th>
@@ -142,6 +286,7 @@ export default function IncomeReport() {
               {(report?.bookings || []).map((booking) => (
                 <tr key={booking._id} className="border-b border-brand-gold/15">
                   <td className="px-4 py-3">{formatDate(booking.bookingDate)}</td>
+                  <td className="px-4 py-3 text-xs font-bold text-brand-gold">{booking.publicId}</td>
                   <td className="px-4 py-3 font-bold text-brand-maroon">{booking.customerName}</td>
                   <td className="px-4 py-3">{booking.customerGender || "Not set"}</td>
                   <td className="px-4 py-3">{booking.treatmentName}</td>
@@ -151,7 +296,7 @@ export default function IncomeReport() {
             </tbody>
           </table>
           {!report?.bookings?.length ? (
-            <p className="px-4 py-8 text-center text-slate-600">No completed treatments in the last 45 days.</p>
+            <p className="px-4 py-8 text-center text-slate-600">No completed treatments for this month.</p>
           ) : null}
         </div>
       </section>

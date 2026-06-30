@@ -1,12 +1,6 @@
 import { Booking } from "../models/Booking.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-const clampDays = (value) => {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return 45;
-  return Math.min(Math.max(parsed, 1), 45);
-};
-
 const money = (value) => Math.round((Number(value) || 0) * 100) / 100;
 
 const parsePriceAmount = (value = "") => {
@@ -14,14 +8,37 @@ const parsePriceAmount = (value = "") => {
   return match ? Number(match[1]) : 0;
 };
 
+const monthName = (monthIndex) =>
+  new Intl.DateTimeFormat("en-LK", { month: "long" }).format(new Date(Date.UTC(2026, monthIndex, 1)));
+
+const getReportPeriod = (query) => {
+  const now = new Date();
+  const parsedYear = Number(query.year);
+  const parsedMonth = Number(query.month);
+  const year = Number.isInteger(parsedYear) && parsedYear >= 2000 && parsedYear <= 2100
+    ? parsedYear
+    : now.getFullYear();
+  const month = Number.isInteger(parsedMonth) && parsedMonth >= 1 && parsedMonth <= 12
+    ? parsedMonth
+    : now.getMonth() + 1;
+
+  const start = new Date(Date.UTC(year, month - 1, 1, 0, 0, 0, 0));
+  const end = new Date(Date.UTC(year, month, 1, 0, 0, 0, 0));
+
+  return {
+    year,
+    month,
+    label: `${monthName(month - 1)} ${year}`,
+    start,
+    end
+  };
+};
+
 export const getIncomeReport = asyncHandler(async (req, res) => {
-  const days = clampDays(req.query.days);
-  const since = new Date();
-  since.setDate(since.getDate() - days);
-  since.setHours(0, 0, 0, 0);
+  const period = getReportPeriod(req.query);
 
   const bookings = await Booking.find({
-    bookingDate: { $gte: since },
+    bookingDate: { $gte: period.start, $lt: period.end },
     status: "Completed"
   })
     .populate("treatment", "name category price")
@@ -70,8 +87,7 @@ export const getIncomeReport = asyncHandler(async (req, res) => {
   );
 
   res.json({
-    days,
-    since,
+    period,
     totals: normalizedTotals,
     bookings: bookings.map((booking) => ({
       _id: booking._id,
