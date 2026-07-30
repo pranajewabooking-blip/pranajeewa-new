@@ -1,8 +1,6 @@
-name: Keep Render API Awake
+name: Manual Render API Health Check
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"
   workflow_dispatch:
 
 jobs:
